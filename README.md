@@ -1,2 +1,2 @@
 # Computer-Grpahics
-Self learning and homework assignments for computer graphics using JavaScript and threeJS
+Self learning and homework assignments for computer graphics written in TypeScript and using threeJS.
