@@ -69,7 +69,7 @@ function createGUI(settings: Settings): dat.GUI {
 /*******************************************************************************
  * The main application. Your logic should later be separated into a different file.
  * A custom class(es) should be used later as well, since a global namespace is "ugly"
- ******************************************************************************/
+ *******************************************************************************/
 
 var mesh: THREE.Mesh;
 var global_name = "placeholder";
