@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="33769164-8c84-4ae9-88d0-65850d1acf5f" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ProjectId" id="1kC28UfEu0IntncXH28Th6MnFyx" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../cg1_exercise_0" />
+    <property name="nodejs_package_manager_path" value="npm" />
+    <property name="vue.rearranger.settings.migration" value="true" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="33769164-8c84-4ae9-88d0-65850d1acf5f" name="Default Changelist" comment="" />
+      <created>1605190093860</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1605190093860</updated>
+      <workItem from="1605190094961" duration="22594000" />
+      <workItem from="1605270334749" duration="11863000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="1200" y="242" width="424" height="528" key="FileChooserDialogImpl" timestamp="1605190190253">
+      <screen x="0" y="0" width="2560" height="1080" />
+    </state>
+    <state x="1200" y="242" width="424" height="528" key="FileChooserDialogImpl/0.0.2560.1080@0.0.2560.1080" timestamp="1605190190253" />
+    <state x="1591" y="245" key="run.anything.popup" timestamp="1605209852783">
+      <screen x="0" y="0" width="4480" height="1220" />
+    </state>
+    <state x="1591" y="245" key="run.anything.popup/0.0.4480.1220@0.0.4480.1220" timestamp="1605209852783" />
+    <state x="1583" y="239" width="672" height="678" key="search.everywhere.popup" timestamp="1605191695925">
+      <screen x="0" y="0" width="4480" height="1220" />
+    </state>
+    <state x="1583" y="239" width="672" height="678" key="search.everywhere.popup/0.0.4480.1220@0.0.4480.1220" timestamp="1605191695925" />
+  </component>
+</project>
