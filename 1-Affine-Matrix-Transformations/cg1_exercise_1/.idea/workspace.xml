@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="33769164-8c84-4ae9-88d0-65850d1acf5f" name="Default Changelist" comment="" />
+    <list default="true" id="484245d0-05de-4b25-a07c-8d97d6cdcea8" name="Default Changelist" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="ProjectId" id="1kC28UfEu0IntncXH28Th6MnFyx" />
+  <component name="ProjectId" id="1kL5tq4GloTH7YY5LTXtCjYR0tG" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -15,20 +15,19 @@
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../cg1_exercise_0" />
-    <property name="nodejs_package_manager_path" value="npm" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="ts.external.directory.path" value="C:\Users\Ananta-Personal\Desktop\CG1\cg1_exercise_1\skeleton\node_modules\typescript\lib" />
     <property name="vue.rearranger.settings.migration" value="true" />
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="33769164-8c84-4ae9-88d0-65850d1acf5f" name="Default Changelist" comment="" />
-      <created>1605190093860</created>
+      <changelist id="484245d0-05de-4b25-a07c-8d97d6cdcea8" name="Default Changelist" comment="" />
+      <created>1605467250892</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1605190093860</updated>
-      <workItem from="1605190094961" duration="22594000" />
-      <workItem from="1605270334749" duration="11863000" />
+      <updated>1605467250892</updated>
+      <workItem from="1605467253458" duration="6762000" />
     </task>
     <servers />
   </component>
@@ -36,17 +35,9 @@
     <option name="version" value="3" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="1200" y="242" width="424" height="528" key="FileChooserDialogImpl" timestamp="1605190190253">
-      <screen x="0" y="0" width="2560" height="1080" />
+    <state x="1576" y="244" key="run.anything.popup" timestamp="1605471310899">
+      <screen x="0" y="0" width="2560" height="1040" />
     </state>
-    <state x="1200" y="242" width="424" height="528" key="FileChooserDialogImpl/0.0.2560.1080@0.0.2560.1080" timestamp="1605190190253" />
-    <state x="1591" y="245" key="run.anything.popup" timestamp="1605209852783">
-      <screen x="0" y="0" width="4480" height="1220" />
-    </state>
-    <state x="1591" y="245" key="run.anything.popup/0.0.4480.1220@0.0.4480.1220" timestamp="1605209852783" />
-    <state x="1583" y="239" width="672" height="678" key="search.everywhere.popup" timestamp="1605191695925">
-      <screen x="0" y="0" width="4480" height="1220" />
-    </state>
-    <state x="1583" y="239" width="672" height="678" key="search.everywhere.popup/0.0.4480.1220@0.0.4480.1220" timestamp="1605191695925" />
+    <state x="1576" y="244" key="run.anything.popup/2560.159.1280.693/0.0.2560.1040@0.0.2560.1040" timestamp="1605471310899" />
   </component>
 </project>

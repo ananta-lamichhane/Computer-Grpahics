@@ -25,9 +25,9 @@ export function setupCamera(camera: THREE.PerspectiveCamera, scene: THREE.Scene)
   camera.near = 0.01;
   camera.far = 10;
   camera.fov = 70;
-  camera.position.z = 4; // default value 1.
+  camera.position.z = 1;
   camera.lookAt(scene.position);
-  camera.updateProjectionMatrix();
+  camera.updateProjectionMatrix()
   return camera
 }
 
