@@ -9,7 +9,18 @@ import {Application, createWindow} from './lib/window';
 import {generateEnvModule} from "snowpack/dist-types/build/build-import-proxy";
 import {Object3D} from "three";
 
-function rotateUsingMatrix(a, b, g, objMatrix){ // rotation along z, y and x respectively.
+
+
+
+/*
+*Helper Functions: these functions help in functionality
+* all affine transformations are undertaken using matrix multiplication of underlying matrix
+* Rotation axis of an object is exactly its middle point by default. This is changed by changing the rotation axis
+* of the group as a whole. i.e. object3d resides in the group and is offset from the group centre so, when the group
+* rotates, object rotates on its edge. see: hands, legs and feet..
+* */
+
+function rotateUsingMatrix(a, b, g, obj){ // rotation along z, y and x respectively, all at once.
     console.log("rotating object now");
     const trMatrix = new THREE.Matrix4();
     trMatrix.set(Math.cos(a) * Math.cos(b), (Math.cos(a) * Math.sin(b) * Math.sin(g)) - (Math.sin(a) * Math.cos(g)), (Math.cos(a) * Math.sin(b) * Math.cos(g))- (Math.sin(a) * Math.sin(g)), 0,
@@ -17,10 +28,11 @@ function rotateUsingMatrix(a, b, g, objMatrix){ // rotation along z, y and x res
                     (-1) * Math.sin(b) , (Math.cos(b) * Math.sin(g)), Math.cos(b) * Math.cos(g), 0,
                         0, 0, 0, 1);
 
-    return objMatrix.multiply(trMatrix); // multiply the transformation matrix of the object with the matrix we got from parameter.
+    obj.matrix.multiply(trMatrix); // multiply the transformation matrix of the object with the matrix we got from parameter.
+    return obj;
 }
 
-function moveObject(x,y,z, obj){
+function moveObject(x,y,z, obj){ // move an object3d, mesh or a group by matrix multiplication
     const trMatrix = new THREE.Matrix4();
     trMatrix.set(1,0,0,x,
                     0,1,0,y,
@@ -30,29 +42,24 @@ function moveObject(x,y,z, obj){
     return obj;
 }
 
-function moveObject2(x,y,z, obj){
-    const trMatrix = new THREE.Matrix4();
-    trMatrix.set(1,0,0,x,
-        0,1,0,y,
-        0, 0, 1, z,
-        0,0,0,1);
-    obj.geometry.matrixWorld.multiply(trMatrix);
-    return obj;
+function highlightGroup(grp, color){ // recursively highlight all elements inside a group.
+    grp.traverse(elem => elem.material?.color.set(color));
+    return grp;
 }
 
-function highlightChild(curr){
+function highlightChild(curr){ // highlight child of currently highlighted object (group).
     //curr.material.color.set('red');
     var child;
     for(var i=0; i<curr.children.length; i++) {
-        if (curr.children[i] instanceof THREE.Mesh) {
-            child = curr.children[i]; // find the first child of type Mesh.
-            //console.log(child);
-            (curr.children[i]).material.color.set('red'); // color its paretn green and it red (highlight)
-            child.parent.material.color.set('green'); // " remove highlight"
-            return child;
-        }
+       if(curr.children[i] instanceof  THREE.Group){
+           highlightGroup(curr, "red"); // remove highlight on current object
+           highlightGroup(curr.children[i], "blue"); // highlight child and its children.
+           return curr.children[i]; // highlighted child is now current object
+       }
+
     }
-    return curr;
+    return curr; // if this returns there was no instance of group in the array, stay where you are.
+
 
 }
 
@@ -63,14 +70,10 @@ function selectNextSibling(curr){ // find next sibling which is Mesh, cycle thro
         return curr;
     }else {
         for (var j = i; j < siblings.length; j++) {
-           // console.log("j = " + j + " i= " + i + "len = " + siblings.length);
-            if (j == siblings.length - 1) {
-                j = -1;
-            }
-            if (siblings[j + 1] instanceof THREE.Mesh) {
-                curr.children.forEach(curr.children.material.color.set('green'));
-                siblings[j + 1].material.color.set('red');
-                return siblings[j + 1];
+            if (siblings[(j + 1)%siblings.length] instanceof THREE.Group) { // cycle through
+                highlightGroup(siblings[(j+1)%siblings.length], "blue");
+                highlightGroup(curr, "red");
+                return siblings[(j + 1)%siblings.length];
             }
         }
         return curr;
@@ -80,45 +83,40 @@ function selectNextSibling(curr){ // find next sibling which is Mesh, cycle thro
 
 function selectPrevSibling(curr){//find previous sibling which is Mesh, cycle through if not found
     const siblings = curr.parent.children;
-    var i = siblings.indexOf(curr);
-    if(siblings.length == 1){
+    console.log("siblings:");
+    console.log(siblings);
+    const bislings = siblings;
+
+    console.log("siblings reversed:");
+    console.log(bislings);
+    var i = bislings.indexOf(curr);
+    if(bislings.length <= 1){ // if only current element is in the array or array is empty do nothing
         return curr;
     }else {
-        for (var j = i; j > 0; j--) {
-            console.log("j = " + j + " i= " + i + "len = " + siblings.length);
-            if (j == 1) {
-                j = siblings.length;
-            }
-            if (siblings[j - 1] instanceof THREE.Group) {
-                curr.traverse(elem => elem.material.color.set("blue"));//curr.material.color.set('green');
-                //siblings[j - 1].material.color.set('red');
-                return siblings[j - 1];
+        for (var j = i; j >-1; j--) {
+            j = j==0?siblings.length:j; // if j=0 set it to sib.length, else let it be.
+            if (bislings[(j -1)] instanceof THREE.Group) {
+                highlightGroup(bislings[(j-1)], "blue");
+                highlightGroup(curr, "red");
+                return bislings[(j-1)];
             }
         }
         return curr;
     }
+
 }
 
 function highlightParent(curr){ // go to parent, highlight if of type mesh (nested mesh geometry)
-    if(curr.parent instanceof THREE.Mesh){ // parent not mesh means there's only scene after this.
-        curr.material.color.set('green');
-        curr.parent.material.color.set('red');
-        return(curr.parent);
+    if(curr.parent instanceof THREE.Group){
+        highlightGroup(curr.parent, "blue"); // go to parent and highlight it.
+        return curr.parent;
     }else{
-        curr.material.color.set('red');
         return curr;
     }
 }
 
 
-function changeRotCenter(obj, vec, rad){ // change axis origin to arbitrary point
-    console.log("what the hell");
-    var orig = obj.geometry.computeBoundingBox();
-    console.log("now this");
-    console.log(orig);
-}
-
-function showHideAxes(obj){
+function showHideAxes(obj){ // toggle visibility of local coordinate axes.
     for(var i=0; i<obj.children.length; i++){
         if(obj.children[i] instanceof THREE.AxesHelper){
             obj.children[i].material.visible = obj.children[i].material.visible == false;
@@ -126,13 +124,43 @@ function showHideAxes(obj){
     }
 }
 
-function moveObjectEx(x, y, z, obj){
-    for(var i=0; i< obj.geometry.vertices.length; i++){
-        obj.geometry.vertices[i].add(new THREE.Vector3(x,y,z));
+
+
+function distFromCentre(grp){
+    var curr = grp;
+    var x=0, y=0, z=0;
+
+    while(curr.parent instanceof THREE.Group){
+        x+= curr.matrix.toArray()[12];
+        y+= curr.matrix.toArray()[13];
+        z += curr.matrix.toArray()[14];
+        curr = curr.parent;
     }
 
-    return obj;
+    return [x,y,z];
 }
+
+function findAxes(grp, axes_grp){
+    for(let i=0; i< axes_grp.length; i++){
+        if(grp.matrix.toArray()[12] == axes_grp[i].matrix.toArray()[12] &&
+            grp.matrix.toArray()[13] == axes_grp[i].matrix.toArray()[13] &&
+            grp.matrix.toArray()[14] == axes_grp[i].matrix.toArray()[14]
+        ){
+            return axes_grp[i];
+        }
+    }
+    console.log("no axes found");
+}
+
+function placeAxes(grp, axes){ // since axes are directly added to scene in the centre of screen, move them to
+    // the position where the group is
+    let dist = distFromCentre(grp);
+    moveObject(dist[0], dist[1], dist[2], axes);
+
+}
+
+
+
 
 function main(){
 
@@ -143,8 +171,8 @@ function main(){
         ["renderer", "."],
         [".", "."]
     ]);
-    root.setLayoutColumns(["2fr", "1fr"]);
-    root.setLayoutRows(["60%", "40%"]);
+    root.setLayoutColumns(["3fr", "0fr"]);
+    root.setLayoutRows(["100%", "0%"]);
 
     var rendererDiv = createWindow("renderer");
     root.appendChild(rendererDiv);
@@ -159,11 +187,11 @@ function main(){
 
     var geometry = new THREE.BoxGeometry(0.2,0.5,0.2);
     var material = new THREE.MeshLambertMaterial({color:'green'});
-    var cube = new THREE.Mesh(geometry, material);
+    var torso = new THREE.Mesh(geometry, material);
 
     var geometry2 = new THREE.BoxGeometry(0.2,0.1,0.1);
     var material2 = new THREE.MeshLambertMaterial({color:'green'});
-    var cube2 = new THREE.Mesh(geometry2, material2);
+    var head = new THREE.Mesh(geometry2, material2);
 
     var geometry2_1 = new THREE.BoxGeometry(0.4,0.1,0.1);
     var material2_1 = new THREE.MeshLambertMaterial({color:'green'});
@@ -175,146 +203,201 @@ function main(){
 
     var grp0 = new THREE.Group();
 
-    var grp5 = new THREE.Group();
-    var grp3 = new THREE.Group();
-    var grp2 = new THREE.Group();
-    var grp1 = new THREE.Group();
-    var grp4 = new THREE.Group();
+    var leg1_grp = new THREE.Group();
+    var head_grp = new THREE.Group();
+    var torso_grp = new THREE.Group();
+    var leg2_grp = new THREE.Group();
+
+    var foot1_grp = new THREE.Group();
+    var foot2_grp = new THREE.Group();
 
 
 
     var geometry3 = new THREE.BoxGeometry(0.06,0.3,0.1);
     var material3 = new THREE.MeshLambertMaterial({color:'green'});
-    var cube3 = new THREE.Mesh(geometry3, material3);
+    var leg1 = new THREE.Mesh(geometry3, material3);
 
     var geometry3_1 = new THREE.BoxGeometry(0.06,0.3,0.1);
     var material3_1 = new THREE.MeshLambertMaterial({color:'green'});
-    var cube3_1 = new THREE.Mesh(geometry3_1, material3_1);
+    var leg2 = new THREE.Mesh(geometry3_1, material3_1);
 
     var geometry4 = new THREE.BoxGeometry(0.05,0.05,0.1);
     var material4 = new THREE.MeshLambertMaterial({color:'white'});
-    var cube4 = new THREE.Mesh(geometry4, material4);
+    var foot1 = new THREE.Mesh(geometry4, material4);
 
     var geometry4_1 = new THREE.BoxGeometry(0.05,0.05,0.1);
     var material4_1 = new THREE.MeshLambertMaterial({color:'white'});
-    var cube4_1 = new THREE.Mesh(geometry4_1, material4_1);
+    var foot2 = new THREE.Mesh(geometry4_1, material4_1);
 
 
-    const axesHelper = new THREE.AxesHelper(5);
-    const axesHelper2 = new THREE.AxesHelper(2);
-
-
-    grp1.matrixAutoUpdate = false;
-    grp2.matrixAutoUpdate = false;
-    grp3.matrixAutoUpdate = false;
-    grp4.matrixAutoUpdate = false;
-    grp5.matrixAutoUpdate = false;
-    grp0.matrixAutoUpdate = false;
-
-
-    cube.matrixAutoUpdate = false;
-    cube2.matrixAutoUpdate = false;
-    cube2_1.matrixAutoUpdate = false;
-    cube3.matrixAutoUpdate = false;
-    cube2_2.matrixAutoUpdate = false;
-    cube3_1.matrixAutoUpdate = false;
-    cube4.matrixAutoUpdate = false;
-    cube4_1.matrixAutoUpdate = false;
-
-
-    grp1.add(cube);
-    grp1.add(axesHelper);
-    var vec = new THREE.Vector3(1,1,1);
-
-   // cube2 = moveObject(0, 0.4,0, cube2);
-    grp2 = moveObject(0, 0.4,0, grp2);
-    grp2.add(cube2);
-
-
-    grp3 = moveObject(-0.05, -0.45, 0,grp3);
-    grp3.add(cube3);
-
-
-    console.log("---------------------------");
-
-    console.log(cube.geometry.vertices);
-    console.log("---------------------------")
-
-    grp0.add(grp1);
-    grp0.add(grp2);
-    grp0.add(grp3);
+    let torso_axis = new THREE.AxesHelper(1);
+    let head_axis = new THREE.AxesHelper(1);
+    let hand1_axis = new THREE.AxesHelper(1);
+    let hand2_axis = new THREE.AxesHelper(1);
+    let leg1_axis = new THREE.AxesHelper(1);
+    let leg2_axis = new THREE.AxesHelper(1);
+    let foot1_axis = new THREE.AxesHelper(1);
+    let foot2_axis = new THREE.AxesHelper(1);
+    let grp0_axis = new THREE.AxesHelper(1);
 
 
 
-    //cube2_2 = moveObject(-0.4, 0, 0, cube2_2);
-   // cube3 = moveObject(-0.05, -0.45, 0, cube3);
-    //cube3.geometry.center();
-   // cube3_1 = moveObject(0.05, -0.45, 0, cube3_1);
+    let axes_grp: THREE.AxesHelper[] = [];
+    let group_grp : THREE.Group [] = [];
 
-   // cube.add(cube2_1);
-    //cube2_1 = moveObject(0.4, 0, 0, cube2_1);
-    //cube.add(cube2_2);
-   // cube2.add(axesHelper2);
-    //cube.add(cube3);
-    //scube3.add(new THREE.AxesHelper(0.2));
-    //cube3.add(cube4);
-    //cube3_1.add(cube4_1);
-    //cube4_1.matrix = moveObject(0.1, 0.1, 0, cube4_1.matrix);
-    //cube4.matrix = moveObject(0.1, 0.1, 0, cube4.matrix);
-   // cube.add(cube3_1);
 
-    const orig = grp0;
+    group_grp.push(grp0);
+    group_grp.push(head_grp);
+    group_grp.push(torso_grp);
+    group_grp.push(leg1_grp);
+    group_grp.push(leg2_grp);
+    group_grp.push(foot1_grp);
+    group_grp.push(foot2_grp);
+  //  group_grp.push(hand1_grp);
+   // group_grp.push(hand2_grp);
+    axes_grp.push(grp0_axis);
+    axes_grp.push(head_axis);
+    axes_grp.push(torso_axis);
+    axes_grp.push(foot1_axis);
+    axes_grp.push(foot2_axis);
+    axes_grp.push(leg1_axis);
+    axes_grp.push(leg2_axis);
+
+
+    /********set matrix auto update false *********************/
+
+    torso.matrixAutoUpdate = false;
+    head.matrixAutoUpdate = false;
+    leg1.matrixAutoUpdate = false;
+    leg2.matrixAutoUpdate = false;
+    foot1.matrixAutoUpdate = false;
+    foot2.matrixAutoUpdate = false;
+
+
+    axes_grp.forEach(elem =>elem.matrixAutoUpdate =false);
+    group_grp.forEach(elem =>elem.matrixAutoUpdate =false);
+
+    /*------------------------------------------------------------------------------------------
+    *Create scene graph hierarchy, enclose each object in a group so as to make rotation on
+    * edge easier
+
+    *--------------------------------------------------------------------------------- */
+
+
+    torso_grp.add(torso);
+
+
+
+   // head = moveObject(0, 0.4,0, cube2);
+    head_grp = moveObject(0, 0.4,0, head_grp); // move the group first
+    head_grp.add(head); // add object to the group
+    //moveObject(0, 0.2, 0, cube2);
+
+
+    leg2 = moveObject(0, -0.26, 0,leg2);
+    leg2_grp = moveObject(0.05, -0.20, 0,leg2_grp);
+    leg2_grp.add(leg2);
+
+    // move object from group centre (for offset in rotation centre)
+    leg1 = moveObject(0, -0.26, 0,leg1);
+    leg1_grp = moveObject(-0.05, -0.20, 0,leg1_grp);
+    leg1_grp.add(leg1);
+
+     foot1_grp.add(foot1);
+     foot2_grp.add(foot2);
+
+    moveObject(0, -0.35, 0.01, foot1_grp);
+    moveObject(0, -0.05, 0.0, foot1);
+    moveObject(0, -0.35, 0.01, foot2_grp);
+    moveObject(0, -0.05, 0.0, foot2);
+
+     leg1_grp.add(foot1_grp);
+    leg2_grp.add(foot2_grp);
+
+
+
+    grp0.add(head_grp);
+    grp0.add(leg1_grp);
+    grp0.add(leg2_grp);
+    grp0.add(torso_grp); // create a group hierarchy
+
+
+/******************Add axes for each group to the scene directly, move them where the groups are**********/
+    axes_grp.forEach(elem => scene.add(elem));
+    for(let i = 0; i< axes_grp.length; i++){
+        console.log("what the hell");
+        let distance_from_centre = distFromCentre(group_grp[i]);
+        moveObject(distance_from_centre[0], distance_from_centre[1], distance_from_centre[2],axes_grp[i]);
+        //axes_grp[i].visible = false;
+    }
+
+
+
+
+
+
+    var orig = grp0.clone(true);
+
+    /***********************Create scene ******************************/
+
     scene.add(grp0);
 
     /*----------------------------------------keyboard Input --------------------------------------------*/
-var curr = cube;
+    var curr = grp0; // start working on the largest group, curr will be overwritten after it goes into listener loop
+    var curraxis = findAxes(grp0, axes_grp);
 
     window.addEventListener("keydown", event => { //can't be included in callBack().wont't function right away.
-
-        if(curr == cube){
-            console.log("not working properly");
-        }
-        console.log(curr);
         console.log("pressed key : "+ event.key);
+        console.log(curr);
+        curraxis = findAxes(curr, axes_grp);
         if (event.key == "ArrowUp") {
-            curr.matrix = rotateUsingMatrix(0, 0, 0.1, curr.matrix);
+            rotateUsingMatrix(0, 0, 0.1, curr);
+            rotateUsingMatrix(0,0,0.1, curraxis);
         }
         if (event.key == "ArrowDown") {
-            curr.matrix = rotateUsingMatrix(0, 0, -0.1, curr.matrix);
+            rotateUsingMatrix(0, 0, -0.1, curr);
+            rotateUsingMatrix(0,0,-0.1, curraxis);
 
         }
         if (event.key == "ArrowLeft") {
-           curr.matrix= rotateUsingMatrix(0, 0.1, 0, curr.matrix);
+           rotateUsingMatrix(0, 0.1, 0, curr);
+            rotateUsingMatrix(0,0.1,0, curraxis);
         }
         if (event.key == "ArrowRight") {
-           curr.matrix= rotateUsingMatrix(0, -0.1, 0, curr.matrix);
-
+           rotateUsingMatrix(0, -0.1, 0, curr);
+            rotateUsingMatrix(0,-0.1,0, curraxis);
         }
         if (event.key == "s") {
-
-                curr = highlightChild(curr);
+            curraxis.visible = false;
+            curr = highlightChild(curr);
+            curraxis = findAxes(curr, axes_grp);
+            curraxis.visible = true;
         }
 
         if(event.key == "d"){
+            curraxis.visible = false;
             curr = selectNextSibling(curr);
+            curraxis = findAxes(curr, axes_grp);
+            curraxis.visible = true;
         }
         if(event.key == "a"){
+            curraxis.visible = false;
             curr = selectPrevSibling(curr);
+            curraxis = findAxes(curr, axes_grp);
+            curraxis.visible = true;
         }
         if(event.key == "w"){
+            curraxis.visible = false;
             curr = highlightParent(curr);
-        }
-        if(event.key == "w"){
-            curr = orig;
+            curraxis = findAxes(curr, axes_grp);
+            curraxis.visible = true;
         }
         if(event.key == "c"){
-            showHideAxes(curr);
+            findAxes(curr, axes_grp).visible = findAxes(curr, axes_grp).visible == false;
         }
-        if(event.key == "x"){
-            var s= new THREE.Sphere();
-           // curr.geometry.normalize();
-            curr.geometry.boundingSphere?.set(new THREE.Vector3(0,0,0), 2);
-            curr.geometry.center();
+        if(event.key == "r"){ // TODO : must be done traversing the matrix
+            scene.remove(grp0);
+            scene.add(orig);
         }
     });
 
