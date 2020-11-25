@@ -6,11 +6,7 @@ import * as helper from './helper';
 //import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls';
 import RenderWidget from './lib/rendererWidget';
 import {Application, createWindow} from './lib/window';
-import {generateEnvModule} from "snowpack/dist-types/build/build-import-proxy";
-import {Object3D} from "three";
-
-
-
+import * as tr from './transform_functions'
 
 /*
 *Helper Functions: these functions help in functionality
@@ -20,150 +16,9 @@ import {Object3D} from "three";
 * rotates, object rotates on its edge. see: hands, legs and feet..
 * */
 
-function rotateUsingMatrix(a, b, g, obj){ // rotation along z, y and x respectively, all at once.
-    console.log("rotating object now");
-    const trMatrix = new THREE.Matrix4();
-    trMatrix.set(Math.cos(a) * Math.cos(b), (Math.cos(a) * Math.sin(b) * Math.sin(g)) - (Math.sin(a) * Math.cos(g)), (Math.cos(a) * Math.sin(b) * Math.cos(g))- (Math.sin(a) * Math.sin(g)), 0,
-                    Math.sin(a) * Math.cos(b), (Math.sin(a) * Math.sin(b) * Math.sin(g))+(Math.cos(a) * Math.cos(g)), (Math.sin(a) * Math.sin(b) * Math.cos(g))-(Math.cos(a) * Math.sin(g)), 0,
-                    (-1) * Math.sin(b) , (Math.cos(b) * Math.sin(g)), Math.cos(b) * Math.cos(g), 0,
-                        0, 0, 0, 1);
-
-    obj.matrix.multiply(trMatrix); // multiply the transformation matrix of the object with the matrix we got from parameter.
-    return obj;
-}
-
-function moveObject(x,y,z, obj){ // move an object3d, mesh or a group by matrix multiplication
-    const trMatrix = new THREE.Matrix4();
-    trMatrix.set(1,0,0,x,
-                    0,1,0,y,
-                    0, 0, 1, z,
-                    0,0,0,1);
-    obj.matrix.multiply(trMatrix);
-    return obj;
-}
-
-function highlightGroup(grp, color){ // recursively highlight all elements inside a group.
-    grp.traverse(elem => elem.material?.color.set(color));
-    return grp;
-}
-
-function highlightChild(curr){ // highlight child of currently highlighted object (group).
-    //curr.material.color.set('red');
-    var child;
-    for(var i=0; i<curr.children.length; i++) {
-       if(curr.children[i] instanceof  THREE.Group){
-           highlightGroup(curr, "red"); // remove highlight on current object
-           highlightGroup(curr.children[i], "blue"); // highlight child and its children.
-           return curr.children[i]; // highlighted child is now current object
-       }
-
-    }
-    return curr; // if this returns there was no instance of group in the array, stay where you are.
-
-
-}
-
-function selectNextSibling(curr){ // find next sibling which is Mesh, cycle through if not found
-    const siblings = curr.parent.children;
-    var i = siblings.indexOf(curr);
-    if(siblings.length <= 1){
-        return curr;
-    }else {
-        for (var j = i; j < siblings.length; j++) {
-            if (siblings[(j + 1)%siblings.length] instanceof THREE.Group) { // cycle through
-                highlightGroup(siblings[(j+1)%siblings.length], "blue");
-                highlightGroup(curr, "red");
-                return siblings[(j + 1)%siblings.length];
-            }
-        }
-        return curr;
-    }
-}
-
-
-function selectPrevSibling(curr){//find previous sibling which is Mesh, cycle through if not found
-    const siblings = curr.parent.children;
-    console.log("siblings:");
-    console.log(siblings);
-    const bislings = siblings;
-
-    console.log("siblings reversed:");
-    console.log(bislings);
-    var i = bislings.indexOf(curr);
-    if(bislings.length <= 1){ // if only current element is in the array or array is empty do nothing
-        return curr;
-    }else {
-        for (var j = i; j >-1; j--) {
-            j = j==0?siblings.length:j; // if j=0 set it to sib.length, else let it be.
-            if (bislings[(j -1)] instanceof THREE.Group) {
-                highlightGroup(bislings[(j-1)], "blue");
-                highlightGroup(curr, "red");
-                return bislings[(j-1)];
-            }
-        }
-        return curr;
-    }
-
-}
-
-function highlightParent(curr){ // go to parent, highlight if of type mesh (nested mesh geometry)
-    if(curr.parent instanceof THREE.Group){
-        highlightGroup(curr.parent, "blue"); // go to parent and highlight it.
-        return curr.parent;
-    }else{
-        return curr;
-    }
-}
-
-
-function showHideAxes(obj){ // toggle visibility of local coordinate axes.
-    for(var i=0; i<obj.children.length; i++){
-        if(obj.children[i] instanceof THREE.AxesHelper){
-            obj.children[i].material.visible = obj.children[i].material.visible == false;
-        }
-    }
-}
-
-
-
-function distFromCentre(grp){
-    var curr = grp;
-    var x=0, y=0, z=0;
-
-    while(curr.parent instanceof THREE.Group){
-        x+= curr.matrix.toArray()[12];
-        y+= curr.matrix.toArray()[13];
-        z += curr.matrix.toArray()[14];
-        curr = curr.parent;
-    }
-
-    return [x,y,z];
-}
-
-function findAxes(grp, axes_grp){
-    for(let i=0; i< axes_grp.length; i++){
-        if(grp.matrix.toArray()[12] == axes_grp[i].matrix.toArray()[12] &&
-            grp.matrix.toArray()[13] == axes_grp[i].matrix.toArray()[13] &&
-            grp.matrix.toArray()[14] == axes_grp[i].matrix.toArray()[14]
-        ){
-            return axes_grp[i];
-        }
-    }
-    console.log("no axes found");
-}
-
-function placeAxes(grp, axes){ // since axes are directly added to scene in the centre of screen, move them to
-    // the position where the group is
-    let dist = distFromCentre(grp);
-    moveObject(dist[0], dist[1], dist[2], axes);
-
-}
-
-
 
 
 function main(){
-
     /* --------------------------------setup-------------------------------------------------------------*/
 
     var root = Application("Robot"); // taken from ex0
@@ -177,7 +32,6 @@ function main(){
     var rendererDiv = createWindow("renderer");
     root.appendChild(rendererDiv);
 
-
     var renderer = new THREE.WebGLRenderer({
         antialias: true,  // to enable anti-alias and get smoother output
     });
@@ -185,49 +39,40 @@ function main(){
 
     /*--------------------------Adding Robot Parts ---------------------------------------*/
 
-    var geometry = new THREE.BoxGeometry(0.2,0.5,0.2);
-    var material = new THREE.MeshLambertMaterial({color:'green'});
-    var torso = new THREE.Mesh(geometry, material);
-
-    var geometry2 = new THREE.BoxGeometry(0.2,0.1,0.1);
-    var material2 = new THREE.MeshLambertMaterial({color:'green'});
-    var head = new THREE.Mesh(geometry2, material2);
-
-    var geometry2_1 = new THREE.BoxGeometry(0.4,0.1,0.1);
-    var material2_1 = new THREE.MeshLambertMaterial({color:'green'});
-    var cube2_1 = new THREE.Mesh(geometry2_1, material2_1);
-
-    var geometry2_2 = new THREE.BoxGeometry(0.4,0.1,0.1);
-    var material2_2 = new THREE.MeshLambertMaterial({color:'green'});
-    var cube2_2 = new THREE.Mesh(geometry2_2, material2_2);
-
-    var grp0 = new THREE.Group();
-
-    var leg1_grp = new THREE.Group();
-    var head_grp = new THREE.Group();
-    var torso_grp = new THREE.Group();
-    var leg2_grp = new THREE.Group();
-
-    var foot1_grp = new THREE.Group();
-    var foot2_grp = new THREE.Group();
 
 
+    var torso_geometry = new THREE.BoxGeometry(0.2,0.5,0.2); // moves independently too
+    var torso_material = new THREE.MeshLambertMaterial({color:'red'});
+    var torso = new THREE.Mesh(torso_geometry, torso_material);
 
-    var geometry3 = new THREE.BoxGeometry(0.06,0.3,0.1);
-    var material3 = new THREE.MeshLambertMaterial({color:'green'});
-    var leg1 = new THREE.Mesh(geometry3, material3);
+    var head_geometry = new THREE.BoxGeometry(0.2,0.1,0.1);
+    var head_material = new THREE.MeshLambertMaterial({color:'red'});
+    var head = new THREE.Mesh(head_geometry, head_material);
 
-    var geometry3_1 = new THREE.BoxGeometry(0.06,0.3,0.1);
-    var material3_1 = new THREE.MeshLambertMaterial({color:'green'});
-    var leg2 = new THREE.Mesh(geometry3_1, material3_1);
 
-    var geometry4 = new THREE.BoxGeometry(0.05,0.05,0.1);
-    var material4 = new THREE.MeshLambertMaterial({color:'white'});
-    var foot1 = new THREE.Mesh(geometry4, material4);
+    var leg1_geometry = new THREE.BoxGeometry(0.06,0.3,0.1);
+    var leg1_material = new THREE.MeshLambertMaterial({color:'red'});
+    var leg1 = new THREE.Mesh(leg1_geometry, leg1_material);
 
-    var geometry4_1 = new THREE.BoxGeometry(0.05,0.05,0.1);
-    var material4_1 = new THREE.MeshLambertMaterial({color:'white'});
-    var foot2 = new THREE.Mesh(geometry4_1, material4_1);
+    var leg2_geometry = new THREE.BoxGeometry(0.06,0.3,0.1);
+    var leg2_material = new THREE.MeshLambertMaterial({color:'red'});
+    var leg2 = new THREE.Mesh(leg2_geometry,leg2_material);
+
+    var hand1_geometry = new THREE.BoxGeometry(0.25,0.05,0.1);
+    var hand1_material = new THREE.MeshLambertMaterial({color:'red'});
+    var hand1 = new THREE.Mesh(hand1_geometry, hand1_material);
+
+    var hand2_geometry = new THREE.BoxGeometry(0.25,0.05,0.1);
+    var hand2_material = new THREE.MeshLambertMaterial({color:'red'});
+    var hand2 = new THREE.Mesh(hand2_geometry,hand2_material);
+
+    var foot1_geometry = new THREE.BoxGeometry(0.05,0.05,0.05);
+    var foot1_material = new THREE.MeshLambertMaterial({color:'red'});
+    var foot1 = new THREE.Mesh(foot1_geometry, foot1_material);
+
+    var foot2_geometry = new THREE.BoxGeometry(0.05,0.05,0.05);
+    var foot2_material = new THREE.MeshLambertMaterial({color:'red'});
+    var foot2 = new THREE.Mesh(foot2_geometry, foot2_material);
 
 
     let torso_axis = new THREE.AxesHelper(1);
@@ -236,10 +81,20 @@ function main(){
     let hand2_axis = new THREE.AxesHelper(1);
     let leg1_axis = new THREE.AxesHelper(1);
     let leg2_axis = new THREE.AxesHelper(1);
-    let foot1_axis = new THREE.AxesHelper(1);
-    let foot2_axis = new THREE.AxesHelper(1);
-    let grp0_axis = new THREE.AxesHelper(1);
+    let foot1_axis = new THREE.AxesHelper(0.33);
+    let foot2_axis = new THREE.AxesHelper(0.33);
+    let grp0_axis = new THREE.AxesHelper(2);
 
+    var grp0 = new THREE.Group();
+    var leg1_grp = new THREE.Group();
+    var head_grp = new THREE.Group();
+    var torso_grp = new THREE.Group();
+    var leg2_grp = new THREE.Group();
+    let hand1_grp = new THREE.Group();
+    let hand2_grp = new THREE.Group();
+
+    var foot1_grp = new THREE.Group();
+    var foot2_grp = new THREE.Group();
 
 
     let axes_grp: THREE.AxesHelper[] = [];
@@ -253,16 +108,18 @@ function main(){
     group_grp.push(leg2_grp);
     group_grp.push(foot1_grp);
     group_grp.push(foot2_grp);
-  //  group_grp.push(hand1_grp);
-   // group_grp.push(hand2_grp);
+    group_grp.push(hand1_grp);
+    group_grp.push(hand2_grp);
+
     axes_grp.push(grp0_axis);
     axes_grp.push(head_axis);
     axes_grp.push(torso_axis);
-    axes_grp.push(foot1_axis);
-    axes_grp.push(foot2_axis);
     axes_grp.push(leg1_axis);
     axes_grp.push(leg2_axis);
-
+    axes_grp.push(hand1_axis);
+    axes_grp.push(hand2_axis);
+    axes_grp.push(foot1_axis);
+    axes_grp.push(foot2_axis);
 
     /********set matrix auto update false *********************/
 
@@ -272,6 +129,8 @@ function main(){
     leg2.matrixAutoUpdate = false;
     foot1.matrixAutoUpdate = false;
     foot2.matrixAutoUpdate = false;
+    hand2.matrixAutoUpdate = false;
+    hand1.matrixAutoUpdate =false;
 
 
     axes_grp.forEach(elem =>elem.matrixAutoUpdate =false);
@@ -286,57 +145,58 @@ function main(){
 
     torso_grp.add(torso);
 
-
-
-   // head = moveObject(0, 0.4,0, cube2);
-    head_grp = moveObject(0, 0.4,0, head_grp); // move the group first
+    head_grp = tr.moveObject(0, 0.4,0, head_grp); // move the group first
     head_grp.add(head); // add object to the group
-    //moveObject(0, 0.2, 0, cube2);
 
-
-    leg2 = moveObject(0, -0.26, 0,leg2);
-    leg2_grp = moveObject(0.05, -0.20, 0,leg2_grp);
+    leg2_grp = tr.moveObject(0.05, -0.30, 0,leg2_grp);
     leg2_grp.add(leg2);
+    tr.moveObject(0, -0.15, 0,leg2);
+
 
     // move object from group centre (for offset in rotation centre)
-    leg1 = moveObject(0, -0.26, 0,leg1);
-    leg1_grp = moveObject(-0.05, -0.20, 0,leg1_grp);
+    leg1 = tr.moveObject(0, -0.15, 0,leg1);
+    leg1_grp = tr.moveObject(-0.05, -0.30, 0,leg1_grp);
     leg1_grp.add(leg1);
 
-     foot1_grp.add(foot1);
-     foot2_grp.add(foot2);
 
-    moveObject(0, -0.35, 0.01, foot1_grp);
-    moveObject(0, -0.05, 0.0, foot1);
-    moveObject(0, -0.35, 0.01, foot2_grp);
-    moveObject(0, -0.05, 0.0, foot2);
+    // move object from group centre (for offset in rotation centre)
+    hand1 = tr.moveObject(-0.15, 0, 0,hand1);
+    hand1_grp = tr.moveObject(-0.10, 0, 0,hand1_grp);
+    hand1_grp.add(hand1);
 
-     leg1_grp.add(foot1_grp);
+    hand2_grp = tr.moveObject(0.10, 0, 0,hand2_grp);
+    hand2_grp.add(hand2);
+    tr.moveObject(0.15, 0, 0,hand2);
+
+
+
+
+    foot1_grp.add(foot1);
+    foot2_grp.add(foot2);
+
+    tr.moveObject(0, -0.25, 0.01, foot1_grp);
+    tr.moveObject(0, -0.05, 0.0, foot1);
+    tr.moveObject(0, -0.25, 0.02, foot2_grp);
+    tr.moveObject(0, -0.05, 0.0, foot2);
+
+    leg1_grp.add(foot1_grp);
     leg2_grp.add(foot2_grp);
-
-
 
     grp0.add(head_grp);
     grp0.add(leg1_grp);
     grp0.add(leg2_grp);
+    grp0.add(hand1_grp);
+    grp0.add(hand2_grp);
     grp0.add(torso_grp); // create a group hierarchy
 
 
 /******************Add axes for each group to the scene directly, move them where the groups are**********/
     axes_grp.forEach(elem => scene.add(elem));
-    for(let i = 0; i< axes_grp.length; i++){
-        console.log("what the hell");
-        let distance_from_centre = distFromCentre(group_grp[i]);
-        moveObject(distance_from_centre[0], distance_from_centre[1], distance_from_centre[2],axes_grp[i]);
-        //axes_grp[i].visible = false;
+    for(let i = 0; i< group_grp.length; i++){
+        let distance_from_centre = tr.distFromCentre(group_grp[i]);
+       tr.moveObject(distance_from_centre[0], distance_from_centre[1], distance_from_centre[2],axes_grp[i]);
+        axes_grp[i].visible = false;
     }
-
-
-
-
-
-
-    var orig = grp0.clone(true);
 
     /***********************Create scene ******************************/
 
@@ -344,60 +204,64 @@ function main(){
 
     /*----------------------------------------keyboard Input --------------------------------------------*/
     var curr = grp0; // start working on the largest group, curr will be overwritten after it goes into listener loop
-    var curraxis = findAxes(grp0, axes_grp);
+   var curraxis = axes_grp[group_grp.indexOf(curr)];
+
 
     window.addEventListener("keydown", event => { //can't be included in callBack().wont't function right away.
-        console.log("pressed key : "+ event.key);
-        console.log(curr);
-        curraxis = findAxes(curr, axes_grp);
+
+        curraxis = axes_grp[group_grp.indexOf(curr)];
         if (event.key == "ArrowUp") {
-            rotateUsingMatrix(0, 0, 0.1, curr);
-            rotateUsingMatrix(0,0,0.1, curraxis);
+            tr.rotateUsingMatrix(0, 0, 0.1, curr); // rotate object
+            tr.rotateUsingMatrix(0, 0, 0.1, curraxis); // rotate its axis
         }
         if (event.key == "ArrowDown") {
-            rotateUsingMatrix(0, 0, -0.1, curr);
-            rotateUsingMatrix(0,0,-0.1, curraxis);
-
+            tr.rotateUsingMatrix(0, 0, -0.1, curr);
+            tr.rotateUsingMatrix(0,0,-0.1, curraxis);
         }
         if (event.key == "ArrowLeft") {
-           rotateUsingMatrix(0, 0.1, 0, curr);
-            rotateUsingMatrix(0,0.1,0, curraxis);
+           tr.rotateUsingMatrix(0, 0.1, 0, curr);
+            tr.rotateUsingMatrix(0,0.1,0, curraxis);
         }
         if (event.key == "ArrowRight") {
-           rotateUsingMatrix(0, -0.1, 0, curr);
-            rotateUsingMatrix(0,-0.1,0, curraxis);
+
+           tr.rotateUsingMatrix(0, -0.1, 0, curr);
+            tr.rotateUsingMatrix(0,-0.1,0, curraxis);
         }
         if (event.key == "s") {
             curraxis.visible = false;
-            curr = highlightChild(curr);
-            curraxis = findAxes(curr, axes_grp);
+            curr = tr.highlightChild(curr);
+            curraxis = axes_grp[group_grp.indexOf(curr)];
             curraxis.visible = true;
         }
 
         if(event.key == "d"){
             curraxis.visible = false;
-            curr = selectNextSibling(curr);
-            curraxis = findAxes(curr, axes_grp);
+            curr = tr.selectNextSibling(curr);
+            curraxis = axes_grp[group_grp.indexOf(curr)];
             curraxis.visible = true;
         }
         if(event.key == "a"){
             curraxis.visible = false;
-            curr = selectPrevSibling(curr);
-            curraxis = findAxes(curr, axes_grp);
+            curr = tr.selectPrevSibling(curr);
+            curraxis = axes_grp[group_grp.indexOf(curr)];
             curraxis.visible = true;
         }
         if(event.key == "w"){
             curraxis.visible = false;
-            curr = highlightParent(curr);
-            curraxis = findAxes(curr, axes_grp);
+            curr = tr.highlightParent(curr);
+            curraxis = axes_grp[group_grp.indexOf(curr)];
             curraxis.visible = true;
         }
         if(event.key == "c"){
-            findAxes(curr, axes_grp).visible = findAxes(curr, axes_grp).visible == false;
+            curraxis = axes_grp[group_grp.indexOf(curr)];
+            curraxis.visible = !curraxis.visible;
         }
         if(event.key == "r"){ // TODO : must be done traversing the matrix
-            scene.remove(grp0);
-            scene.add(orig);
+            group_grp.forEach(elem => tr.resetAl(elem)); // reset position
+            axes_grp.forEach(elem => tr.resetAl(elem));
+            group_grp.forEach(elem =>tr.highlightGroup(elem, 'red') ); // reset color
+            curr = grp0; // go back to the root
+            curraxis = grp0_axis; // go back to the root axis.
         }
     });
 
@@ -406,9 +270,6 @@ function main(){
     var camera = new THREE.PerspectiveCamera();
     helper.setupLight(scene);
     helper.setupCamera(camera, scene);
-  //var controls = new OrbitControls(camera, rendererDiv);
-   // helper.setupControls(controls);
-
     var wid = new RenderWidget(rendererDiv, renderer, camera, scene);//,controls);
 
     wid.animate();
