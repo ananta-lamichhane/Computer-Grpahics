@@ -1,0 +1,24 @@
+{
+  "scripts": {
+    "start": "snowpack dev",
+    "reload": "snowpack dev --reload",
+    "build": "snowpack build",
+    "test": "echo \"This template does not include a test runner by default.\" && exit 1",
+    "format": "prettier --write \"src/**/*.{ts,js}\"",
+    "lint": "prettier --check \"src/**/*.{ts,js}\""
+  },
+  "dependencies": {
+    "@types/dat.gui": "^0.7.5",
+    "@types/stats.js": "^0.17.0",
+    "dat.gui": "^0.7.7",
+    "stats.js": "^0.17.0",
+    "three": "^0.120.1",
+    "@snowpack/plugin-run-script": "^2.1.2",
+    "@types/canvas-confetti": "^1.0.0",
+    "@types/snowpack-env": "^2.3.0",
+    "prettier": "^2.0.5",
+    "snowpack": "^2.11.0",
+    "typescript": "^4.0.2"
+  },
+  "devDependencies": {}
+}

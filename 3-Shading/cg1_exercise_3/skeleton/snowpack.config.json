@@ -1,0 +1,23 @@
+{
+  "mount": {
+    "public": "/",
+    "src": "/"
+  },
+  "plugins": [
+    [
+      "@snowpack/plugin-run-script",
+      { "cmd": "tsc --noEmit", "watch": "$1 --watch" }
+    ],
+    [
+      "./text-loader.js",
+      { "input": [".c", ".vs", ".fs", ".fx", ".gs", ".cs", ".tc", ".te", ".vsh", ".fsh", ".gsh", ".vshader", ".fshader", ".gshader", ".vert", ".frag", ".geom", ".tesc", ".tese", ".comp", ".glsl"]}
+    ]
+  ],
+  "installOptions": {
+    "installTypes": true
+  },
+  "buildOptions":{
+    "sourceMaps": true
+  },
+  "install": ["stats.js"]
+}
