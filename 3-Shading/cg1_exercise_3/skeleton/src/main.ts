@@ -10,32 +10,41 @@ import * as dat from 'dat.gui';
 // load shaders
 import basicVertexShader from './shader/basic.v.glsl';
 import basicFragmentShader from './shader/basic.f.glsl';
-import ambientVertexShader from './shader/ambient.v.glsl';
-import ambientFragmentShader from './shader/ambient.f.glsl';
-import diffuseLightVertexShader from './shader/diffuse_lambert.v.glsl';
-import diffusedLightFragmentShader from './shader/diffuse_lambert.f.glsl';
-import toonVertexShader from './shader/toon.v.glsl'
-import toonFragmentShader from './shader/toon.f.glsl'
-import specularPhongFragmentShader from './shader/phong_specular.f.glsl'
-import specularPhongVertexShader from './shader/phong_specular.v.glsl'
+import ambientVertexShader from './shader/2_ambient.v.glsl';
+import ambientFragmentShader from './shader/2_ambient.f.glsl';
+import diffuseLightVertexShader from './shader/5_diffuse.v.glsl';
+import diffusedLightFragmentShader from './shader/5_diffuse.f.glsl';
+import toonVertexShader from './shader/4_toon.v.glsl'
+import toonFragmentShader from './shader/4_toon.f.glsl'
+import specularPhongFragmentShader from './shader/6b_phong_specular.f.glsl'
+import specularPhongVertexShader from './shader/6b_phong_specular.v.glsl'
 //import specularGourardFragmentShader from './shader/gourard_specular.f.glsl'
 //import specularGourardVertexShader from './shader/gourard_specular.v.glsl'
-import blinnPhongFragmentShader from './shader/blinn_phong.f.glsl'
-import blinnPhongVertexShader from './shader/blinn_phong.v.glsl'
-import normalFragmentShader from './shader/normal.f.glsl'
-import normalVertexShader from './shader/normal.v.glsl'
-import gouraudPhongFragmentShader from './shader/gouraud_phong.f.glsl'
-import gouraudPhongVertexShader from './shader/gouraud_phong.v.glsl'
+import blinnPhongFragmentShader from './shader/7_blinn_phong.f.glsl'
+import blinnPhongVertexShader from './shader/7_blinn_phong.v.glsl'
+import normalFragmentShader from './shader/3_normal.f.glsl'
+import normalVertexShader from './shader/3_normal.v.glsl'
+import gouraudPhongFragmentShader from './shader/6a_gouraud_phong.f.glsl'
+import gouraudPhongVertexShader from './shader/6a_gouraud_phong.v.glsl'
 import { Color } from 'three';
 var lights: THREE.PointLight;
 var mat : THREE.RawShaderMaterial;
 var light_sphere : THREE.Mesh;
+
+var tr_matrix = new THREE.Matrix4();
+tr_matrix.set(1,0,0,0,0,0.5,0,0,0,0,1,0,0,0,0,1);
+var temp = new THREE.Matrix4();
+temp.getInverse(tr_matrix);
+temp = temp.transpose();
+
 
 
 
 
 
 function main(){
+    console.log("tr_matrix");
+    console.log(temp);
 
     /---------------------------------------* INITIAL SETUP*-------------------------------------------------/
 
@@ -167,7 +176,7 @@ var fshader = basicFragmentShader;
         }
         if(changed.key == "diffuse_color"){
 
-            diffuseColor.set(changed.value[0]/256, changed.value[1]/256, changed.value[2]);
+            diffuseColor.set(changed.value[0]/256, changed.value[1]/256, changed.value[2]/256);
        
         }
         if(changed.key == "specular_reflectance"){
@@ -203,6 +212,7 @@ var fshader = basicFragmentShader;
         // pass given parameters as uniforms create a material with selected shaders.
         var inputMaterial = new THREE.RawShaderMaterial( {
             uniforms:{
+              u_inv_transpose: {value: temp},
               u_lights_position: {value: point_light},
               u_ambient_color : {value: AmbientColor},
               u_ambient_reflectance:{value: ambientReflectance},
