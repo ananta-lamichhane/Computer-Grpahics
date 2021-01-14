@@ -1,0 +1,23 @@
+{
+  "mount": {
+    "public": "/",
+    "src": "/"
+  },
+  "plugins": [
+    [
+      "@snowpack/plugin-run-script",
+      { "cmd": "tsc --noEmit", "watch": "$1 --watch" }
+    ],
+    [
+      "./text-loader.js",
+      { "input": [".glsl",".obj"]}
+    ]
+  ],
+  "installOptions": {
+    "installTypes": true
+  },
+  "buildOptions":{
+    "sourceMaps": true
+  },
+  "install": ["stats.js"]
+}
