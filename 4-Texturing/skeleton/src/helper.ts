@@ -6,13 +6,14 @@ import * as dat from 'dat.gui';
 // local from us provided utilities
 import * as utils from './lib/utils';
 import bunny from './models/bunny.obj';
+import ImageWidget from './imageWidget';
 
 /*******************************************************************************
  * helper functions to build scene (geometry, light), camera and controls.
  ******************************************************************************/
 
 // enum(s)
-export enum Geometries { quad = "Quad", box = "Box", sphere = "Sphere", knot = "Knot", bunny = "Bunny" }
+export enum Geometries { quad = "Sphere", box = "Box", sphere = "Quad", knot = "Knot", bunny = "Bunny" }
 export enum Textures { earth = "Earth", colors = "Colors", disturb = "Disturb", checker = "Checker", terracotta = "Terracotta", plastic = "Plastic", wood_ceiling = "Wood", lava = "Lava", rock = "Rock", indoor = "Enviroment"}
 export enum NormalMaps { uniform_normals = "Uniform", terracotta_normals = "Terracotta", plastic_normals = "Plastic", wood_ceiling_normals = "Wood", lava_normals = "Lava", rock_normals = "Rock"}
 export enum Shaders { uv = "UV attribute", spherical = "Spherical", fixSpherical = "Spherical (fixed)", envMapping = "Environment Mapping", normalmap = "Normal Map" }
