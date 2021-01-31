@@ -51,7 +51,7 @@ export class CanvasWidget{
       data.data[2] = color.b * 255;
       data.data[3] = alpha * 255;
       context.putImageData(data, x, y);
-      console.log(data, x, y)
+      //console.log(data, x, y)
     }
   }
 }

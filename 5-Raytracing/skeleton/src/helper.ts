@@ -106,7 +106,7 @@ export function setupGeometry(scene: THREE.Scene){
 
   var box = new THREE.Mesh( boxGeometry, mirrorMaterial );
   box.position.set( - 175/300, - 250/300 + 2.5/300, - 150/300 );
-  box.rotation.y = 0.25;
+  box.rotation.y = 0.75;
   scene.add(box);
 
   // bottom
